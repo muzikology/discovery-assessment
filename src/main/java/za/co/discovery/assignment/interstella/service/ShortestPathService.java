@@ -1,79 +1,149 @@
 package za.co.discovery.assignment.interstella.service;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
-import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
-import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.SimpleDirectedWeightedGraph;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import za.co.discovery.assignment.interstella.entity.Planet;
-import za.co.discovery.assignment.interstella.entity.Route;
-import za.co.discovery.assignment.interstella.repository.PlanetRepository;
-import za.co.discovery.assignment.interstella.repository.RouteRepository;
+import za.co.discovery.assignment.interstella.entity.Edge;
+import za.co.discovery.assignment.interstella.entity.Vertex;
+import za.co.discovery.assignment.interstella.helper.Graph;
+
+import java.util.*;
+
 
 @Service
-@Lazy
-public class ShortestPathService implements DijkstraAlgorithm  {
-	
+public class ShortestPathService {
 
-	static final Logger LOG = LoggerFactory.getLogger(ShortestPathService.class);
-	
-	@Autowired
-	private PlanetRepository planetRepo;
+    private List<Vertex> vertices;
+    private List<Edge> edges;
+    private Set<Vertex> visitedVertices;
+    private Set<Vertex> unvisitedVertices;
+    private Map<Vertex, Vertex> previousPaths;
+    private Map<Vertex, Float> distance;
 
-	@Autowired
-	private RouteRepository routesRepo;
+    public ShortestPathService() {
+    }
 
-	private SimpleDirectedWeightedGraph<String, DefaultWeightedEdge> graph = new SimpleDirectedWeightedGraph<String, DefaultWeightedEdge>(
-			DefaultWeightedEdge.class);
-		
+    public ShortestPathService(Graph graph) {
+        this.vertices = new ArrayList<>(graph.getVertexes());
+        if (graph.isTrafficAllowed()) {
+            graph.processTraffics();
+        }
+        if (graph.isUndirectedGraph()) {
+            this.edges = new ArrayList<>(graph.getUndirectedEdges());
+        } else {
+            this.edges = new ArrayList<>(graph.getEdges());
+        }
+    }
 
-	@PostConstruct
-	private void initWeightedGraph(){
-		addVertex();
-		addEdges();
-	}
+    public void initializePlanets(Graph graph) {
+        this.vertices = new ArrayList<>(graph.getVertexes());
+        if (graph.isTrafficAllowed()) {
+            graph.processTraffics();
+        }
+        if (graph.isUndirectedGraph()) {
+            this.edges = new ArrayList<>(graph.getUndirectedEdges());
+        } else {
+            this.edges = new ArrayList<>(graph.getEdges());
+        }
+    }
 
+    public void run(Vertex source) {
+        distance = new HashMap<>();
+        previousPaths = new HashMap<>();
+        visitedVertices = new HashSet<>();
+        unvisitedVertices = new HashSet<>();
+        distance.put(source, 0f);
+        unvisitedVertices.add(source);
+        while (unvisitedVertices.size() > 0) {
+            Vertex currentVertex = getVertexWithLowestDistance(unvisitedVertices);
+            visitedVertices.add(currentVertex);
+            unvisitedVertices.remove(currentVertex);
+            evaluateNeighborsWithMinimalDistances(currentVertex);
+        }
+    }
 
-	public void addVertex(){
-		for (Planet planet : planetRepo.findAll()) {
-			this.graph.addVertex(planet.getPlanetID());
-		}
-	}
+    private Vertex getVertexWithLowestDistance(Set<Vertex> vertexes) {
+        Vertex lowestVertex = null;
+        for (Vertex vertex : vertexes) {
+            if (lowestVertex == null) {
+                lowestVertex = vertex;
+            } else if (getShortestDistance(vertex) < getShortestDistance(lowestVertex)) {
+                lowestVertex = vertex;
+            }
+        }
+        return lowestVertex;
+    }
 
+    private void evaluateNeighborsWithMinimalDistances(Vertex currentVertex) {
+        List<Vertex> adjacentVertices = getNeighbors(currentVertex);
+        for (Vertex target : adjacentVertices) {
+            float alternateDistance = getShortestDistance(currentVertex) + getDistance(currentVertex, target);
+            if (alternateDistance < getShortestDistance(target)) {
+                distance.put(target, alternateDistance);
+                previousPaths.put(target, currentVertex);
+                unvisitedVertices.add(target);
+            }
+        }
+    }
 
-	private void addEdges(){
-		DefaultWeightedEdge edge = null;
-		for (Route route : routesRepo.findAll()) {
-			String source  = route.getSource().getPlanetID();
-			String destination = route.getDest().getPlanetID();
-			if(source != destination){
-				edge = this.graph.addEdge(source,destination);
-			}
-			addWeight(edge, route.getDistance());
-		}
-	}
+    private List<Vertex> getNeighbors(Vertex currentVertex) {
+        List<Vertex> neighbors = new ArrayList<>();
+        for (Edge edge : edges) {
+            Vertex destination = fromId(edge.getDestination());
+            if (edge.getSource().equals(currentVertex.getVertexId()) && !isVisited(destination)) {
+                neighbors.add(destination);
+            }
+        }
+        return neighbors;
+    }
 
+    public Vertex fromId(final String str) {
+        for (Vertex v : vertices) {
+            if (v.getVertexId().equalsIgnoreCase(str)) {
+                return v;
+            }
+        }
+        Vertex islandVertex = new Vertex();
+        islandVertex.setVertexId(str);
+        islandVertex.setName("Island " + str);
+        return islandVertex;
+    }
 
-	private void addWeight(DefaultWeightedEdge edge, float weight) {
-		this.graph.setEdgeWeight(edge, weight);
-	}
+    private boolean isVisited(Vertex vertex) {
+        return visitedVertices.contains(vertex);
+    }
 
+    private Float getShortestDistance(Vertex destination) {
+        Float d = distance.get(destination);
+        if (d == null) {
+            return Float.POSITIVE_INFINITY;
+        } else {
+            return d;
+        }
+    }
 
-	@Override
-	public String findShortestPath(String source, String destination) {
-		LOG.info("Source : " + source + "***" + " Destination " + destination);
-		return DijkstraShortestPath.findPathBetween(this.graph, source,destination).toString();
-	}
+    private float getDistance(Vertex source, Vertex target) {
+        for (Edge edge : edges) {
+            if (edge.getSource().equals(source.getVertexId()) && edge.getDestination().equals(target.getVertexId())) {
+                return edge.getDistance() + edge.getTimeDelay();
+            }
+        }
+        throw new RuntimeException("Error: Something went wrong!");
+    }
 
-	@PreDestroy
-	public void cleanup(){
-		this.graph = null;
-	}
+    public LinkedList<Vertex> getPath(Vertex target) {
+        LinkedList<Vertex> path = new LinkedList<>();
+        Vertex step = target;
+
+        if (previousPaths.get(step) == null) {
+            return null;
+        }
+        path.add(step);
+        while (previousPaths.get(step) != null) {
+            step = previousPaths.get(step);
+            path.add(step);
+        }
+
+        Collections.reverse(path);
+        return path;
+    }
+
 }
-
