@@ -54,15 +54,6 @@ public class InterstellaController {
     @PostMapping("/shortest")
     public String getShortestPath(@Valid @RequestBody ShortestPathModel pathModel,
                                   Model model){
-        System.out.println(pathModel.getSelectedVertex());
-        System.out.println(pathModel.getSelectedVertexName());
-        System.out.println(pathModel.getVertexName());
-        System.out.println(pathModel.getDestinationVertex());
-        System.out.println(pathModel.getSourceVertex());
-        System.out.println(pathModel.getThePath());
-        System.out.println(pathModel.getVertexId());
-        System.out.println(pathModel.isTrafficAllowed());
-        System.out.println(pathModel.isUndirectedGraph());
 
         StringBuilder path = new StringBuilder();
         Graph graph = planetService.selectGraph();
@@ -92,7 +83,7 @@ public class InterstellaController {
         pathModel.setThePath(path.toString());
         pathModel.setSelectedVertexName(destination.getName());
         model.addAttribute("shortest", pathModel);
-        return pathModel.getThePath();
+        return reversePlanetOrder(pathModel.getThePath());
     }
 
     @GetMapping("/vertices")
@@ -139,6 +130,30 @@ public class InterstellaController {
     public ResponseEntity<Void> deletPlanet(@PathVariable String id) {
         planetService.deleteVertex(id);
         return new ResponseEntity<>(null, null, HttpStatus.OK);
+    }
+
+    public static String reversePlanetOrder(String name) {
+
+        name = name.trim();
+
+        StringBuilder reversedNameBuilder = new StringBuilder();
+        StringBuilder subNameBuilder = new StringBuilder();
+
+        for (int i = 0; i < name.length(); i++) {
+
+            char currentChar = name.charAt(i);
+
+            if (currentChar != ' ' && currentChar != '-') {
+                subNameBuilder.append(currentChar);
+            } else {
+                reversedNameBuilder.insert(0, currentChar + subNameBuilder.toString());
+                subNameBuilder.setLength(0);
+            }
+
+        }
+
+        return reversedNameBuilder.insert(0, subNameBuilder.toString()).toString();
+
     }
 
 }
