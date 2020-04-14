@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface PlanetRepository extends JpaRepository<Vertex, Long> {
 
-    Optional<Vertex> findByName(String origin);
+    Vertex findByName(String vertex);
     Vertex getPlanetByVertexId(String id);
     Boolean existsByVertexId(String planetId);
 

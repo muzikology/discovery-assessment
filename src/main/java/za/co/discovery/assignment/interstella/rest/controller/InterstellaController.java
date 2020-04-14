@@ -54,6 +54,16 @@ public class InterstellaController {
     @PostMapping("/shortest")
     public String getShortestPath(@Valid @RequestBody ShortestPathModel pathModel,
                                   Model model){
+        System.out.println(pathModel.getSelectedVertex());
+        System.out.println(pathModel.getSelectedVertexName());
+        System.out.println(pathModel.getVertexName());
+        System.out.println(pathModel.getDestinationVertex());
+        System.out.println(pathModel.getSourceVertex());
+        System.out.println(pathModel.getThePath());
+        System.out.println(pathModel.getVertexId());
+        System.out.println(pathModel.isTrafficAllowed());
+        System.out.println(pathModel.isUndirectedGraph());
+
         StringBuilder path = new StringBuilder();
         Graph graph = planetService.selectGraph();
         if (pathModel.isTrafficAllowed()) {
@@ -64,9 +74,9 @@ public class InterstellaController {
         }
         shortestPathService.initializePlanets(graph);
 
-        Optional<Vertex> source = planetService.getPlanetByName(pathModel.getVertexName());
+        Vertex source = planetService.getVertexByName(pathModel.getVertexName());
         Vertex destination = planetService.getPlanetById(pathModel.getSelectedVertex());
-        shortestPathService.run(source.get());
+        shortestPathService.run(source);
         LinkedList<Vertex> paths = shortestPathService.getPath(destination);
 
         if (paths != null) {
@@ -74,15 +84,15 @@ public class InterstellaController {
                 path.append(v.getName() + " (" + v.getVertexId() + ")");
                 path.append("\t");
             }
-        } else if (source != null && destination != null && source.get().getVertexId().equals(destination.getVertexId())) {
-            path.append("PATH_NOT_NEEDED" + source.get().getName());
+        } else if (source != null && destination != null && source.getVertexId().equals(destination.getVertexId())) {
+            path.append("PATH_NOT_NEEDED" + source.getName());
         } else {
             path.append("PATH_NOT_AVAILABLE");
         }
         pathModel.setThePath(path.toString());
         pathModel.setSelectedVertexName(destination.getName());
         model.addAttribute("shortest", pathModel);
-        return "result";
+        return pathModel.getThePath();
     }
 
     @GetMapping("/vertices")
@@ -114,9 +124,8 @@ public class InterstellaController {
 
     @PutMapping("vertices")
     public ResponseEntity<Vertex> updatePlanet(@Valid @RequestBody Vertex planet){
-        Optional<Vertex> existingPlanet =  planetRepository.findByName(planet.getName());
-        if(existingPlanet.isPresent() && (!existingPlanet.get().getVertexId().equals(planet.getVertexId()))){
-//            throw new ResponseStatusException(HttpStatus.CONFLICT, "Planet Already Used");
+        Vertex existingPlanet =  planetRepository.findByName(planet.getName());
+        if(existingPlanet.getName() != null && (!existingPlanet.getVertexId().equals(planet.getVertexId()))){
             planetService.updatePlanet(planet);
 
         }

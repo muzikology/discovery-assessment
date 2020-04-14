@@ -39,11 +39,6 @@ public class PlanetService {
         return planetRepository.findAll();
     }
 
-    @Transactional
-    public Optional<Vertex> getPlanetByName(String name){
-
-        return planetRepository.findByName(name);
-    }
 
     @Transactional(readOnly = true)
     public Vertex getPlanetById(String id) {
@@ -145,7 +140,7 @@ public class PlanetService {
     }
 
     public Vertex getVertexByName(String name) {
-        return planetRepository.findByName(name).get();
+        return planetRepository.findByName(name);
     }
 
     public Vertex getVertexById(String vertexId) {
