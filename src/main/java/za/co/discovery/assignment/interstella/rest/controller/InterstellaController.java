@@ -29,12 +29,10 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/interstella")
+@CrossOrigin(origins = "http://localhost:4200")
 public class InterstellaController {
 
 
-//    @Autowired
-//    @Lazy
-//    private DijkstraAlgorithm shortestPathService;
 
     @Autowired
     private PlanetService planetService;
@@ -108,9 +106,9 @@ public class InterstellaController {
     @PostMapping("vertices")
     public ResponseEntity<Vertex> addNewPlanet(@Valid @RequestBody Vertex planet){
 
-            if(planetService.vertexExist(planet.getVertexId())){
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Planet Already Exists");
-        }
+//            if(planetService.vertexExist(planet.getVertexId())){
+//            throw new ResponseStatusException(HttpStatus.CONFLICT, "Planet Already Exists");
+//        }
         return new ResponseEntity<>(planetService.addNewVertex(planet), null, HttpStatus.OK);
     }
 
@@ -118,7 +116,9 @@ public class InterstellaController {
     public ResponseEntity<Vertex> updatePlanet(@Valid @RequestBody Vertex planet){
         Optional<Vertex> existingPlanet =  planetRepository.findByName(planet.getName());
         if(existingPlanet.isPresent() && (!existingPlanet.get().getVertexId().equals(planet.getVertexId()))){
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Planet Already Used");
+//            throw new ResponseStatusException(HttpStatus.CONFLICT, "Planet Already Used");
+            planetService.updatePlanet(planet);
+
         }
 
         Vertex updatePlanet = planetService.updatePlanet(planet);
@@ -127,8 +127,8 @@ public class InterstellaController {
     }
 
     @DeleteMapping("vertices/{id}")
-    public ResponseEntity<Void> deletPlanet(@PathVariable Long id) {
-        planetService.deletePlanetById(id);
+    public ResponseEntity<Void> deletPlanet(@PathVariable String id) {
+        planetService.deleteVertex(id);
         return new ResponseEntity<>(null, null, HttpStatus.OK);
     }
 

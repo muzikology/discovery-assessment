@@ -12,6 +12,6 @@ public interface PlanetRepository extends JpaRepository<Vertex, Long> {
     Vertex getPlanetByVertexId(String id);
     Boolean existsByVertexId(String planetId);
 
-    void deleteByVertexId(Long id);
+    void deleteByVertexId(String id);
 
 }

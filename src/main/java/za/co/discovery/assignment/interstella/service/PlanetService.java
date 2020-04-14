@@ -57,9 +57,9 @@ public class PlanetService {
     }
 
     public Vertex updatePlanet(Vertex planet){
-        if(planet.getVertexId()== null){
-            return addNewVertex(planet);
-        }
+//        if(planet.getVertexId()== null){
+//            return addNewVertex(planet);
+//        }
 
         return planetRepository.save(planet);
     }
@@ -83,7 +83,7 @@ public class PlanetService {
 
     public void deletePlanetById(Long id){
 
-        planetRepository.deleteByVertexId(id);
+        planetRepository.deleteById(id);
 
     }
 
@@ -136,7 +136,7 @@ public class PlanetService {
     }
 
     public boolean deleteVertex(String vertexId) {
-        planetRepository.deleteByVertexId(Long.valueOf(vertexId));
+        planetRepository.deleteByVertexId(vertexId);
         return true;
     }
 
