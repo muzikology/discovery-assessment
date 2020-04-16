@@ -24,6 +24,7 @@ public class ShortestPathEndpoint {
     @ResponsePayload
     public GetShortestPathResponse getShortestPath(@RequestPayload GetShortestPathRequest request) {
         GetShortestPathResponse response = new GetShortestPathResponse();
+        System.out.println(request.getName());
         response.setPath(pathRepository.getShortestPath(request.getName()));
 
         return response;
