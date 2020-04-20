@@ -45,18 +45,10 @@ public class PlanetService {
         return planetRepository.getPlanetByVertexId(id);
     }
 
-    public Vertex addNewVertex(Vertex planet)
+    public Vertex createVertex(Vertex planet)
     {
         Vertex addPlanet = planetRepository.save(planet);
         return addPlanet;
-    }
-
-    public Vertex updatePlanet(Vertex planet){
-//        if(planet.getVertexId()== null){
-//            return addNewVertex(planet);
-//        }
-
-        return planetRepository.save(planet);
     }
 
     public Graph selectGraph() {
@@ -118,16 +110,18 @@ public class PlanetService {
 
 
     public Vertex saveVertex(Vertex vertex) {
+        System.out.println(vertex.getId());
         planetRepository.save(vertex);
         return vertex;
     }
 
     public Vertex updateVertex(Vertex vertex) {
-        if(vertex.getVertexId() != null) {
-            return planetRepository.save(vertex);
-        }
 
-        return vertex;
+          if(vertex.getId() == null){
+              return saveVertex(vertex);
+          }
+
+        return planetRepository.save(vertex);
     }
 
     public boolean deleteVertex(String vertexId) {
@@ -143,8 +137,8 @@ public class PlanetService {
         return planetRepository.findByName(name);
     }
 
-    public Vertex getVertexById(String vertexId) {
-        return planetRepository.getPlanetByVertexId(vertexId);
+    public Vertex getVertexById(Long vertexId) {
+        return planetRepository.getOne(vertexId);
     }
 
     public Edge saveEdge(Edge edge) {

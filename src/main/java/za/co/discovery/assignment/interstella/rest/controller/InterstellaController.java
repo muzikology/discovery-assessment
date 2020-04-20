@@ -20,7 +20,7 @@ import za.co.discovery.assignment.interstella.service.ShortestPathService;
 import javax.validation.Valid;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -31,7 +31,6 @@ import java.util.Optional;
 @RequestMapping("/interstella")
 @CrossOrigin(origins = "http://localhost:4200")
 public class InterstellaController {
-
 
 
     @Autowired
@@ -52,9 +51,9 @@ public class InterstellaController {
     }
 
     @PostMapping("/shortest")
-    public String getShortestPath(@Valid @RequestBody ShortestPathModel pathModel,
+    public ResponseEntity<String> getShortestPath(@Valid @RequestBody ShortestPathModel pathModel,
                                   Model model){
-
+        String resultString = null;
         StringBuilder path = new StringBuilder();
         Graph graph = planetService.selectGraph();
         if (pathModel.isTrafficAllowed()) {
@@ -83,7 +82,8 @@ public class InterstellaController {
         pathModel.setThePath(path.toString());
         pathModel.setSelectedVertexName(destination.getName());
         model.addAttribute("shortest", pathModel);
-        return reversePlanetOrder(pathModel.getThePath());
+        resultString = reverseString(pathModel.getThePath());
+        return new ResponseEntity<>(resultString, null, HttpStatus.OK);
     }
 
     @GetMapping("/vertices")
@@ -107,21 +107,21 @@ public class InterstellaController {
     @PostMapping("vertices")
     public ResponseEntity<Vertex> addNewPlanet(@Valid @RequestBody Vertex planet){
 
-//            if(planetService.vertexExist(planet.getVertexId())){
-//            throw new ResponseStatusException(HttpStatus.CONFLICT, "Planet Already Exists");
-//        }
-        return new ResponseEntity<>(planetService.addNewVertex(planet), null, HttpStatus.OK);
+        if(planet.getId() != null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A new Planet Cannot Already have an ID");
+        }
+        if(planetService.getVertexByName(planet.getName())!= null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name is not Unique");
+        }
+        return new ResponseEntity<>(planetService.createVertex(planet), null, HttpStatus.OK);
     }
 
     @PutMapping("vertices")
     public ResponseEntity<Vertex> updatePlanet(@Valid @RequestBody Vertex planet){
-        Vertex existingPlanet =  planetRepository.findByName(planet.getName());
-        if(existingPlanet.getName() != null && (!existingPlanet.getVertexId().equals(planet.getVertexId()))){
-            planetService.updatePlanet(planet);
 
-        }
+        Vertex updatePlanet = new Vertex();
 
-        Vertex updatePlanet = planetService.updatePlanet(planet);
+        updatePlanet = planetService.updateVertex(planet);
 
         return new ResponseEntity<>(updatePlanet, null, HttpStatus.OK);
     }
@@ -175,20 +175,20 @@ public class InterstellaController {
         return "redirect:/vertex/" + vertex.getVertexId();
     }
     public void buildVertexValidation(String vertexId, Model model) {
-        String vertexName = planetService.getVertexById(vertexId) == null ? "" : planetService.getVertexById(vertexId).getName();
+        String vertexName = planetService.getPlanetById(vertexId) == null ? "" : planetService.getPlanetById(vertexId).getName();
         String message = "Planet " + vertexId + " already exists as " + vertexName;
         model.addAttribute("validationMessage", message);
     }
 
     @RequestMapping("vertex/edit/{vertexId}")
     public String editVertex(@PathVariable String vertexId, Model model) {
-        model.addAttribute("vertex", planetService.getVertexById(vertexId));
+        model.addAttribute("vertex", planetService.getPlanetById(vertexId));
         return "vertexupdate";
     }
 
     @RequestMapping("vertex/{vertexId}")
     public String showVertex(@PathVariable String vertexId, Model model) {
-        model.addAttribute("vertex", planetService.getVertexById(vertexId));
+        model.addAttribute("vertex", planetService.getPlanetById(vertexId));
         return "vertexshow";
     }
 
@@ -199,29 +199,24 @@ public class InterstellaController {
     }
 
 
+    public String reverseString(String str)
+    {
 
-    public static String reversePlanetOrder(String name) {
+        Pattern pattern = Pattern.compile("\\s");
 
-        name = name.trim();
+        String[] temp = pattern.split(str);
+        String result = "";
 
-        StringBuilder reversedNameBuilder = new StringBuilder();
-        StringBuilder subNameBuilder = new StringBuilder();
-
-        for (int i = 0; i < name.length(); i++) {
-
-            char currentChar = name.charAt(i);
-
-            if (currentChar != ' ' && currentChar != '-') {
-                subNameBuilder.append(currentChar);
-            } else {
-                reversedNameBuilder.insert(0, currentChar + subNameBuilder.toString());
-                subNameBuilder.setLength(0);
-            }
-
+        // Iterate over the temp array and store
+        // the string in reverse order.
+        for (int i = 0; i < temp.length; i++) {
+            if (i == temp.length - 1)
+                result = temp[i] + result;
+            else
+                result = " " + temp[i] + result;
         }
-
-        return reversedNameBuilder.insert(0, subNameBuilder.toString()).toString();
-
+        return result;
     }
+
 
 }

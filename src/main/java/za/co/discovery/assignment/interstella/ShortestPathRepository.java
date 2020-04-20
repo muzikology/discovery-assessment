@@ -58,7 +58,7 @@ public class ShortestPathRepository {
         Vertex source = graph.getVertexes().get(0);
         Vertex destination = planetService.getVertexByName(name);
         if (destination == null) {
-            destination = planetService.getVertexById(name);
+            destination = planetService.getPlanetById(name);
             if (destination == null) {
                 return name + PLANET_DOES_NOT_EXIST;
             }

@@ -1,5 +1,6 @@
 package za.co.discovery.assignment.interstella.config;
 
+import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +34,12 @@ public class WebServiceBean extends WsConfigurerAdapter {
         wsdl11Definition.setSchema(interstellarSchema);
         return wsdl11Definition;
     }
+
+    @Bean
+    public Hibernate5Module hibernate5Module() {
+        return new Hibernate5Module();
+    }
+
 
     @Bean
     public XsdSchema interstellarSchema() {

@@ -21,9 +21,19 @@ public class SwaggerConfig {
     @Bean
     public Docket InterstellaApi() {
         return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(apiInfo())
                 .select()
                 .apis(RequestHandlerSelectors.any())
                 .paths(PathSelectors.any())
+                .build();
+    }
+
+    private ApiInfo apiInfo() {
+        return new ApiInfoBuilder().title("Interstella REST API")
+                .description("Interstella API Documentation.").termsOfServiceUrl("")
+                .license("Interstella")
+                .licenseUrl("https://www.apache.org/licenses/LICENSE-2.0")
+                .version("0.0.1")
                 .build();
     }
 }

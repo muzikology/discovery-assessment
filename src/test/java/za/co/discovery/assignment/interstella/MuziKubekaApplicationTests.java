@@ -125,7 +125,7 @@ public class MuziKubekaApplicationTests {
 	public void verifyThatShowVertexViewAndModelIsCorrect() throws Exception {
 		//Set
 		Vertex expectedVertex = new Vertex("A", "Earth");
-		when(planetService.getVertexById("vertexId")).thenReturn(expectedVertex);
+		when(planetService.getPlanetById("vertexId")).thenReturn(expectedVertex);
 		//Verify
 		mockMvc.perform(get("/interstella/vertex/vertexId"))
 				.andExpect(status().isOk())
@@ -172,7 +172,7 @@ public class MuziKubekaApplicationTests {
 		//Set
 		Vertex expectedVertex = new Vertex("A", "Earth");
 		when(planetService.vertexExist("A")).thenReturn(true);
-		when(planetService.getVertexById("A")).thenReturn(expectedVertex);
+		when(planetService.getPlanetById("A")).thenReturn(expectedVertex);
 		String message = "Planet A already exists as Earth";
 		//Verify
 		mockMvc.perform(post("/interstella/vertex").param("vertexId", "A").param("name", "Earth"))
@@ -185,7 +185,7 @@ public class MuziKubekaApplicationTests {
 	public void verifyThatEditVertexViewAndModelIsCorrect() throws Exception {
 		//Set
 		Vertex expectedVertex = new Vertex("A", "Earth");
-		when(planetService.getVertexById("vertexId")).thenReturn(expectedVertex);
+		when(planetService.getPlanetById("vertexId")).thenReturn(expectedVertex);
 		//Verify
 		mockMvc.perform(get("/interstella/vertex/edit/vertexId"))
 				.andExpect(status().isOk())
@@ -232,7 +232,7 @@ public class MuziKubekaApplicationTests {
 
 	public void setUpFixture() {
 		mockMvc = standaloneSetup(
-				new InterstellaController(planetService, shortestPathService, planetRepository)
+				new InterstellaController(shortestPathService,planetService, planetRepository)
 		)
 				.setViewResolvers(getInternalResourceViewResolver())
 				.build();
